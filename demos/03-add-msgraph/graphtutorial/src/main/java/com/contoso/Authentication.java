@@ -2,12 +2,18 @@
 // Licensed under the MIT License.
 package com.contoso;
 import java.net.MalformedURLException;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import com.microsoft.aad.msal4j.ClientCredentialFactory;
+import com.microsoft.aad.msal4j.ClientCredentialParameters;
+import com.microsoft.aad.msal4j.ConfidentialClientApplication;
 import com.microsoft.aad.msal4j.DeviceCode;
 import com.microsoft.aad.msal4j.DeviceCodeFlowParameters;
 import com.microsoft.aad.msal4j.IAuthenticationResult;
+import com.microsoft.aad.msal4j.IClientCredential;
 import com.microsoft.aad.msal4j.PublicClientApplication;
 
 /**
@@ -55,6 +61,45 @@ public class Authentication {
         IAuthenticationResult result = app.acquireToken(
             DeviceCodeFlowParameters
                 .builder(scopeSet, deviceCodeConsumer)
+                .build()
+        ).exceptionally(ex -> {
+            System.out.println("Unable to authenticate - " + ex.getMessage());
+            return null;
+        }).join();
+
+        if (result != null) {
+            return result.accessToken();
+        }
+
+        return null;
+    }
+
+    public static String getAppOnlyToken(String appId, String tenantId, String secret) {
+        // Simple case: using a secret
+        IClientCredential credential = ClientCredentialFactory.create(secret);
+
+        // To use a certificate instead, do something like below
+        //PrivateKey privateKey;
+        //X509Certificate publicKey;
+        //IClientCredential certCredential = ClientCredentialFactory.create(privateKey, publicKey);
+
+        ConfidentialClientApplication app;
+        try {
+            // Build the MSAL application object with
+            // app ID and authority
+            app = ConfidentialClientApplication.builder(appId, credential)
+                .authority(String.format("https://login.microsoftonline.com/%s", tenantId))
+                .build();
+
+        } catch (MalformedURLException e) {
+            return null;
+        }
+
+        Set<String> scopes = Set.of("https://graph.microsoft.com/.default");
+
+        IAuthenticationResult result = app.acquireToken(
+            ClientCredentialParameters
+                .builder(scopes)
                 .build()
         ).exceptionally(ex -> {
             System.out.println("Unable to authenticate - " + ex.getMessage());

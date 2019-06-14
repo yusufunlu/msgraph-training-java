@@ -1,2 +1,5 @@
 app.id=YOUR_APP_ID_HERE
 app.scopes=User.Read,Calendars.Read
+app.appOnlyAppId=YOUR_APP_ONLY_APP_ID_HERE
+app.appOnlySecret=YOUR_APP_ONLY_SECRET_HERE
+app.tenantId=YOUR_TENANT_ID

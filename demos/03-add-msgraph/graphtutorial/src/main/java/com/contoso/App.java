@@ -35,10 +35,19 @@ public class App {
 
         final String appId = oAuthProperties.getProperty("app.id");
         final String[] appScopes = oAuthProperties.getProperty("app.scopes").split(",");
+        final String appOnlyAppId = oAuthProperties.getProperty("app.appOnlyAppId");
+        final String appOnlySecret = oAuthProperties.getProperty("app.appOnlySecret");
+        final String tenantId = oAuthProperties.getProperty("app.tenantId");
 
-        // Get an access token
+        // Get an access tokens (MSAL)
         Authentication.initialize(appId);
-        final String accessToken = Authentication.getUserAccessToken(appScopes);
+        //final String accessToken = Authentication.getUserAccessToken(appScopes);
+        //final String appToken = Authentication.getAppOnlyToken(appOnlyAppId, tenantId, appOnlySecret);
+
+        // Get access tokens (ADAL)
+        ADALAuthentication.initialize(appId);
+        final String accessToken = ADALAuthentication.getUserAccessToken("https://graph.microsoft.com");
+        final String appToken = ADALAuthentication.getAppOnlyToken("https://graph.microsoft.com", appOnlyAppId, tenantId, appOnlySecret);
 
         // Greet the user
         User user = Graph.getUser(accessToken);
@@ -54,6 +63,9 @@ public class App {
             System.out.println("0. Exit");
             System.out.println("1. Display access token");
             System.out.println("2. List calendar events");
+            System.out.println("3. Display app-only token");
+            System.out.println("4. Create a user");
+            System.out.println("5. Update a user");
 
             try {
                 choice = input.nextInt();
@@ -74,6 +86,18 @@ public class App {
                 case 2:
                     // List the calendar
                     listCalendarEvents(accessToken);
+                    break;
+                case 3:
+                    // Display app-only token
+                    System.out.println("App token: " + appToken);
+                    break;
+                case 4:
+                    // Create a user
+                    createUser(appToken);
+                    break;
+                case 5:
+                    // Update a user
+                    updateUser(appToken);
                     break;
                 default:
                     System.out.println("Invalid choice");
@@ -103,5 +127,24 @@ public class App {
         LocalDateTime dateTime = LocalDateTime.parse(date.dateTime);
 
         return dateTime.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)) + " (" + date.timeZone + ")";
+    }
+
+    private static void createUser(String appToken) {
+        User newUser = Graph.createUser(appToken, "Jason Johnston", "jasonjoh", "jasonjoh@m365x930361.onmicrosoft.com");
+
+        System.out.println("Created user: " + newUser.displayName);
+    }
+
+    private static void updateUser(String appToken) {
+        User userToUpdate = Graph.getUserByUpn(appToken, "jasonjoh@m365x930361.onmicrosoft.com");
+
+        if (userToUpdate != null) {
+            User patchUser = new User();
+            patchUser.jobTitle = "Java Developer";
+
+            Graph.updateUser(appToken, userToUpdate.id, patchUser);
+
+            System.out.println("Updated user's job title");
+        }
     }
 }
