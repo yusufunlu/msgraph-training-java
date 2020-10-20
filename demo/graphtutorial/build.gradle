@@ -15,21 +15,28 @@ plugins {
 }
 
 repositories {
-    // Use jcenter for resolving dependencies.
-    // You can declare any Maven/Ivy/file repository here.
     jcenter()
+    jcenter{
+        url 'https://oss.jfrog.org/artifactory/oss-snapshot-local'
+    }
 }
 
 // <DependenciesSnippet>
 dependencies {
     // This dependency is used by the application.
-    implementation 'com.google.guava:guava:28.2-jre'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
     implementation 'com.microsoft.azure:msal4j:1.4.0'
-    implementation 'com.microsoft.graph:microsoft-graph:1.6.0'
+    //implementation 'com.microsoft.graph:microsoft-graph:1.6.0'
     implementation 'org.slf4j:slf4j-nop:1.8.0-beta4'
+    compile('com.microsoft.graph:microsoft-graph-auth:0.2.0-SNAPSHOT')
+    implementation 'com.microsoft.graph:microsoft-graph-beta:0.1.0-SNAPSHOT'
+    compile 'joda-time:joda-time:2.10.6'
+// https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
+    compile group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.0'
+    implementation 'com.google.code.gson:gson:2.8.6'
+
 }
 // </DependenciesSnippet>
 
