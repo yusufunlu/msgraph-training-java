@@ -141,22 +141,20 @@ public class Graph {
         onlineMeeting.subject = "User Token Meeting";
         Attendee attendee1 = new Attendee();
         EmailAddress emailAddress = new EmailAddress();
-        emailAddress.name = "Yusuf Ünlü";
+        emailAddress.name = "Yusuf Ünlü1";
         emailAddress.address = "unlu.yufus@gmail.com";
         attendee1.emailAddress = emailAddress;
-
-        MeetingParticipantInfo meetingParticipantInfo = new MeetingParticipantInfo();
 
 
         MeetingParticipants meetingParticipants = new MeetingParticipants();
         LinkedList<MeetingParticipantInfo> attendees = new LinkedList<MeetingParticipantInfo>();
         MeetingParticipantInfo targets = new MeetingParticipantInfo();
-        IdentitySet identity = new IdentitySet();
-        Identity user = new Identity();
-        user.displayName = "Yusuf Ünlü";
-        user.id = "61cfd52a-e9b1-45d9-acd4-2d9efe48f2fe";
-        identity.user = user;
-        targets.identity = identity;
+        IdentitySet identitySet = new IdentitySet();
+        Identity identity = new Identity();
+        identity.displayName = "Yusuf Ünlü2";
+        identity.id = "61cfd55a-e9b1-45d9-acd4-2d9efe48f2fe";
+        identitySet.user = identity;
+        targets.identity = identitySet;
         attendees.add(targets);
         meetingParticipants.attendees = attendees;
 
