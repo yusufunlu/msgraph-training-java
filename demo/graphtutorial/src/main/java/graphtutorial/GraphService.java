@@ -3,17 +3,8 @@
 
 package graphtutorial;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.CompletableFuture;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.microsoft.graph.auth.confidentialClient.AuthorizationCodeProvider;
 import com.microsoft.graph.auth.confidentialClient.ClientCredentialProvider;
 import com.microsoft.graph.auth.enums.NationalCloud;
@@ -21,24 +12,30 @@ import com.microsoft.graph.auth.publicClient.UsernamePasswordProvider;
 import com.microsoft.graph.authentication.IAuthenticationProvider;
 import com.microsoft.graph.concurrency.ICallback;
 import com.microsoft.graph.core.ClientException;
-import com.microsoft.graph.core.DefaultClientConfig;
-import com.microsoft.graph.http.IHttpProvider;
 import com.microsoft.graph.httpcore.HttpClients;
 import com.microsoft.graph.httpcore.ICoreAuthenticationProvider;
 import com.microsoft.graph.logger.LoggerLevel;
 import com.microsoft.graph.models.extensions.*;
-import com.microsoft.graph.models.generated.*;
+import com.microsoft.graph.models.generated.AccessLevel;
+import com.microsoft.graph.models.generated.AttendeeType;
+import com.microsoft.graph.models.generated.BodyType;
+import com.microsoft.graph.models.generated.OnlineMeetingPresenters;
 import com.microsoft.graph.options.Option;
 import com.microsoft.graph.options.QueryOption;
 import com.microsoft.graph.requests.extensions.GraphServiceClient;
 import com.microsoft.graph.requests.extensions.IEventCollectionPage;
-import com.microsoft.graph.requests.extensions.IMessageCollectionPage;
 import com.microsoft.graph.requests.extensions.ITeamCollectionWithReferencesPage;
-import okhttp3.*;
 import okhttp3.Call;
 import okhttp3.Request;
+import okhttp3.*;
 import okhttp3.logging.HttpLoggingInterceptor;
 import org.joda.time.DateTime;
+
+import java.io.IOException;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Properties;
+import java.util.*;
 
 import static com.microsoft.graph.models.generated.LobbyBypassScope.EVERYONE;
 
@@ -47,28 +44,14 @@ import static com.microsoft.graph.models.generated.LobbyBypassScope.EVERYONE;
  */
 public class GraphService {
 
+    private static final List<String> SCOPES = Arrays.asList("https://graph.microsoft.com/.default");
     private static IGraphServiceClient graphClient = null;
     private static SimpleAuthProvider authProvider = null;
-
-    private static final String CLIENT_ID = "d2dff56c-029c-42f4-b603-f0c272fb8e11";
-    private static final List<String> SCOPES = Arrays.asList("https://graph.microsoft.com/.default");
-    private static final String AUTHORIZATION_CODE = "";
-    private static final String REDIRECT_URL = "";
-    private static final NationalCloud NATIONAL_CLOUD = NationalCloud.Global;
-    private static final String TENANT = "39d77147-bbfe-4e85-8b97-41ae6698b503";
-    private static final String CLIENT_SECRET = "DaAu~wmb_vD9P1gSWoFHa6iIm8_0-8Jl1p";
-    private static final String TENANT_GUID = "39d77147-bbfe-4e85-8b97-41ae6698b503";
-    private static final String USERNAME = "yusufu@dealroomevents202.onmicrosoft.com";
-    private static final String PASSWORD = "46764523Usa";
     private static OkHttpClient okHttpClient;
-    private static User me;
-    private Properties oAuthProperties;
-    private UsernamePasswordProvider usernamePasswordProvider;
-    private AuthorizationCodeProvider authorizationCodeProvider;
-    private ClientCredentialProvider clientCredentialProvider;
-    private IAuthenticationProvider iAuthenticationProvider;
-    private ICoreAuthenticationProvider iCoreAuthenticationProvider;
-
+    private final Properties oAuthProperties;
+    private final IAuthenticationProvider iAuthenticationProvider;
+    private final ICoreAuthenticationProvider iCoreAuthenticationProvider;
+    private User me;
 
     public GraphService(Properties oAuthProperties) {
         this.oAuthProperties = oAuthProperties;
@@ -77,9 +60,10 @@ public class GraphService {
         iCoreAuthenticationProvider = createUsernamePasswordProvider();
     }
 
-    private  UsernamePasswordProvider createUsernamePasswordProvider2(){
-        UsernamePasswordProvider usernamePasswordProvider = new UsernamePasswordProvider(oAuthProperties.getProperty("CLIENT_ID"),
-                Arrays.asList(oAuthProperties.getProperty("SCOPES").toString().split(",")),
+    private UsernamePasswordProvider createUsernamePasswordProvider() {
+        UsernamePasswordProvider usernamePasswordProvider = new UsernamePasswordProvider(
+                oAuthProperties.getProperty("CLIENT_ID"),
+                SCOPES,
                 oAuthProperties.getProperty("USERNAME"),
                 oAuthProperties.getProperty("PASSWORD"),
                 NationalCloud.Global,
@@ -88,27 +72,35 @@ public class GraphService {
         return usernamePasswordProvider;
     }
 
-    private static UsernamePasswordProvider createUsernamePasswordProvider(){
-        UsernamePasswordProvider usernamePasswordProvider = new UsernamePasswordProvider(CLIENT_ID, SCOPES, USERNAME, PASSWORD, NationalCloud.Global, TENANT, CLIENT_SECRET);
-        return usernamePasswordProvider;
-    }
 
-    private  AuthorizationCodeProvider createAuthorizationCodeProvider(){
-        AuthorizationCodeProvider authorizationCodeProvider = new AuthorizationCodeProvider(CLIENT_ID, SCOPES, AUTHORIZATION_CODE, REDIRECT_URL, NATIONAL_CLOUD, TENANT, CLIENT_SECRET);
+    private AuthorizationCodeProvider createAuthorizationCodeProvider() {
+        AuthorizationCodeProvider authorizationCodeProvider = new AuthorizationCodeProvider(
+                oAuthProperties.getProperty("CLIENT_ID"),
+                SCOPES,
+                oAuthProperties.getProperty("AUTHORIZATION_CODE"),
+                oAuthProperties.getProperty("REDIRECT_URL"),
+                NationalCloud.Global,
+                oAuthProperties.getProperty("TENANT"),
+                oAuthProperties.getProperty("CLIENT_SECRET"));
         return authorizationCodeProvider;
     }
 
-    private ClientCredentialProvider createClientCredentialProvider(){
-        ClientCredentialProvider clientCredentialProvider = new ClientCredentialProvider(CLIENT_ID, SCOPES, CLIENT_SECRET, TENANT_GUID, NATIONAL_CLOUD);
+    private ClientCredentialProvider createClientCredentialProvider() {
+        ClientCredentialProvider clientCredentialProvider = new ClientCredentialProvider(
+                oAuthProperties.getProperty("CLIENT_ID"),
+                SCOPES,
+                oAuthProperties.getProperty("CLIENT_SECRET"),
+                oAuthProperties.getProperty("TENANT"),
+                NationalCloud.Global);
         return clientCredentialProvider;
     }
 
-    private SimpleAuthProvider createSimpleAuthProvider(String accessToken){
+    private SimpleAuthProvider createSimpleAuthProvider(String accessToken) {
         authProvider = new SimpleAuthProvider(accessToken);
         return authProvider;
     }
 
-    private OkHttpClient  createOkHttpClient(){
+    private OkHttpClient createOkHttpClient() {
 
         HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
         loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
@@ -117,7 +109,7 @@ public class GraphService {
                 .newBuilder()
                 .addInterceptor(loggingInterceptor)
                 //.addInterceptor(new LoggingInterceptor())
-                .followSslRedirects(false) // sample configuration to apply to client
+                .followSslRedirects(false)
                 .build();
 
         return okHttpClient;
@@ -127,41 +119,27 @@ public class GraphService {
     private void initGraphClient() {
 
         if (graphClient == null) {
-            final OkHttpClient httpClient = HttpClients.createDefault(iCoreAuthenticationProvider)
-                    .newBuilder()
-                    .followSslRedirects(false) // sample configuration to apply to client
-                    .build();
-
-            final IHttpProvider httpProvider = DefaultClientConfig
-                    .createWithAuthenticationProvider(iAuthenticationProvider)
-                    .getHttpProvider(httpClient);
-
             graphClient = GraphServiceClient
                     .builder()
                     .authenticationProvider(iAuthenticationProvider)
-                    .httpProvider(httpProvider)
                     .buildClient();
             graphClient.getLogger().setLoggingLevel(LoggerLevel.DEBUG);
-
-            //graphClient.setServiceRoot("https://graph.microsoft.com/beta");
+            graphClient.setServiceRoot("https://graph.microsoft.com/beta");
         }
     }
 
 
-
-    public User getUser(String accessToken) {
+    public User getUserSimpleWay() {
         initGraphClient();
 
-        // GET /me to get authenticated user
         User me = graphClient
-            .me()
-            .buildRequest()
-            .get();
-
+                .me()
+                .buildRequest()
+                .get();
         return me;
     }
 
-    public void getUser2(String accessToken) {
+    public void getUserWithCallback() {
         initGraphClient();
         graphClient
                 .me()
@@ -170,23 +148,28 @@ public class GraphService {
                     @Override
                     public void success(User user) {
                         me = user;
-                        System.out.println("User: "+ user.getRawObject().toString());
+                        System.out.println("User: " + user.getRawObject().toString());
                     }
+
                     @Override
                     public void failure(ClientException ex) {
-                        System.out.println("User Exception: "+ ex.getLocalizedMessage());
+                        System.out.println("User Exception: " + ex.getLocalizedMessage());
                     }
                 });
     }
 
-    public void getUser3(String accessToken) {
+    public void getUserWithOkhttpclient() {
 
         Request request = new Request.Builder().url("https://graph.microsoft.com/beta/me/").build();
 
         okHttpClient.newCall(request).enqueue(new Callback() {
             @Override
-            public void onResponse(Call call, Response response){
-                    //String responseBody = response.body().string();
+            public void onResponse(Call call, Response response) {
+                try {
+                    String responseBody = response.body().string();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
                 // Your processing with the response body
             }
@@ -211,11 +194,11 @@ public class GraphService {
         //DateTimeFormatter dateTimeFormatter = DateTimeFormatter.of
 
         Date date = new Date();
-        date.setHours(date.getHours()+1);
+        date.setHours(date.getHours() + 1);
         onlineMeeting.startDateTime.setTime(date);
 
         Date date2 = new Date();
-        date2.setHours(date2.getHours()+3);
+        date2.setHours(date2.getHours() + 3);
         onlineMeeting.endDateTime.setTime(date2);
 
         onlineMeeting.startDateTime.setTimeZone(zone);
@@ -256,8 +239,8 @@ public class GraphService {
             createdOnlineMeeting = graphClient.me().onlineMeetings()
                     .buildRequest()
                     .post(onlineMeeting);
-        } catch (Exception exception){
-            System.out.println("Exception: "+ exception.getLocalizedMessage());
+        } catch (Exception exception) {
+            System.out.println("Exception: " + exception.getLocalizedMessage());
         }
 
         String json = gson.toJson(createdOnlineMeeting.getRawObject());
@@ -267,7 +250,7 @@ public class GraphService {
 
     }
 
-    public List<Team> myJoinedTeams(String accessToken){
+    public List<Team> myJoinedTeams(String accessToken) {
         initGraphClient();
         ITeamCollectionWithReferencesPage joinedTeams = graphClient.me().joinedTeams()
                 .buildRequest()
@@ -287,11 +270,11 @@ public class GraphService {
 
         // GET /me/events
         IEventCollectionPage eventPage = graphClient
-            .me()
-            .events()
-            .buildRequest(options)
-            .select("subject,body,bodyPreview,organizer,attendees, start,end,location")
-            .get();
+                .me()
+                .events()
+                .buildRequest(options)
+                .select("subject,body,bodyPreview,organizer,attendees, start,end,location")
+                .get();
 
         return eventPage.getCurrentPage();
     }
@@ -367,7 +350,7 @@ public class GraphService {
         LinkedList<Attendee> attendeesList = new LinkedList<Attendee>();
         Attendee attendees = new Attendee();
         EmailAddress emailAddress = new EmailAddress();
-        emailAddress.address =  "yusuf.unlu@dealroomevents.com";
+        emailAddress.address = "yusuf.unlu@dealroomevents.com";
         emailAddress.name = "Samantha Booth";
         attendees.emailAddress = emailAddress;
         attendees.type = AttendeeType.REQUIRED;

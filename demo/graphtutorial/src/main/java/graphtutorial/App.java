@@ -60,7 +60,7 @@ public class App {
         switch(choice) {
             case 0:
                 // Greet the user
-                graphService.getUser(accessToken);
+                graphService.getUserWithCallback();
                 //System.out.println("Welcome " + user.displayName);
                 //System.out.println("Welcome " + user.toString());
                 break;
