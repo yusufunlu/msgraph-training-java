@@ -7,22 +7,19 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Properties;
-import java.util.Scanner;
 
-import com.google.gson.Gson;
 import com.microsoft.graph.models.extensions.DateTimeTimeZone;
 import com.microsoft.graph.models.extensions.Event;
 import com.microsoft.graph.models.extensions.Team;
-import com.microsoft.graph.models.extensions.User;
 
 /**
  * Graph Tutorial
  *
  */
 public class App {
+    private static GraphService graphService;
     public static void main(String[] args) {
         System.out.println("Java Graph Tutorial");
         System.out.println();
@@ -41,12 +38,14 @@ public class App {
         final String[] appScopes = oAuthProperties.getProperty("app.scopes").split(",");
         // </LoadSettingsSnippet>
 
+        graphService = new GraphService(oAuthProperties);
+
         // Get an access token
-        Authentication.initialize(appId);
+        //Authentication.initialize(appId);
         //final String accessToken = Authentication.getUserAccessToken(appScopes);
-        final String accessToken = "eyJ0eXAiOiJKV1QiLCJub25jZSI6InFJTkxEYTJCZzU4WHdfX0RhOGJJSjlvNUpKS216dDRUaElXeS1xZldVVkUiLCJhbGciOiJSUzI1NiIsIng1dCI6ImtnMkxZczJUMENUaklmajRydDZKSXluZW4zOCIsImtpZCI6ImtnMkxZczJUMENUaklmajRydDZKSXluZW4zOCJ9.eyJhdWQiOiJodHRwczovL2dyYXBoLm1pY3Jvc29mdC5jb20iLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC8zOWQ3NzE0Ny1iYmZlLTRlODUtOGI5Ny00MWFlNjY5OGI1MDMvIiwiaWF0IjoxNjAzMTg3NjA2LCJuYmYiOjE2MDMxODc2MDYsImV4cCI6MTYwMzE5MTUwNiwiYWNjdCI6MCwiYWNyIjoiMSIsImFpbyI6IkUyUmdZT0JLNlB0Yi9OZFkvdjRURmNZZDduVUwvNmh4THB6Qzh6UkwxUFp0MHljLzMvc0EiLCJhbXIiOlsicHdkIl0sImFwcF9kaXNwbGF5bmFtZSI6IkphdmEgR3JhcGggVHV0b3JpYWwiLCJhcHBpZCI6ImQyZGZmNTZjLTAyOWMtNDJmNC1iNjAzLWYwYzI3MmZiOGUxMSIsImFwcGlkYWNyIjoiMSIsImZhbWlseV9uYW1lIjoidW5sdSIsImdpdmVuX25hbWUiOiJ5dXN1ZiIsImlkdHlwIjoidXNlciIsImlwYWRkciI6IjIxMi4yLjIxMi4xNTYiLCJuYW1lIjoieXVzdWZ1Iiwib2lkIjoiNjFjZmQ1MmEtZTliMS00NWQ5LWFjZDQtMmQ5ZWZlNDhmMmZlIiwicGxhdGYiOiIxNCIsInB1aWQiOiIxMDAzMjAwMEVFNkEzNTI3IiwicmgiOiIwLkFBQUFSM0hYT2Y2N2hVNkxsMEd1WnBpMUEyejEzOUtjQXZSQ3RnUHd3bkw3amhGZ0FQWS4iLCJzY3AiOiJOb3Rlcy5DcmVhdGUgTm90ZXMuUmVhZCBOb3Rlcy5SZWFkLkFsbCBOb3Rlcy5SZWFkV3JpdGUgTm90ZXMuUmVhZFdyaXRlLkFsbCBOb3Rlcy5SZWFkV3JpdGUuQ3JlYXRlZEJ5QXBwIE9ubGluZU1lZXRpbmdzLlJlYWQgT25saW5lTWVldGluZ3MuUmVhZFdyaXRlIFRlYW0uQ3JlYXRlIFRlYW0uUmVhZEJhc2ljLkFsbCBUZWFtc0FwcC5SZWFkIFRlYW1zQXBwLlJlYWQuQWxsIFRlYW1zQXBwLlJlYWRXcml0ZSBUZWFtc0FwcC5SZWFkV3JpdGUuQWxsIFVzZXIuUmVhZCBwcm9maWxlIG9wZW5pZCBlbWFpbCIsInN1YiI6IjhFV29TSEhUZ29MMjU2SzJWWkN6MDE1MjkybWpSZjZ2cUMtUUphcFZRQzAiLCJ0ZW5hbnRfcmVnaW9uX3Njb3BlIjoiRVUiLCJ0aWQiOiIzOWQ3NzE0Ny1iYmZlLTRlODUtOGI5Ny00MWFlNjY5OGI1MDMiLCJ1bmlxdWVfbmFtZSI6Inl1c3VmdUBkZWFscm9vbWV2ZW50czIwMi5vbm1pY3Jvc29mdC5jb20iLCJ1cG4iOiJ5dXN1ZnVAZGVhbHJvb21ldmVudHMyMDIub25taWNyb3NvZnQuY29tIiwidXRpIjoiXzJkOFRVTHo3a3ViYm9LeFVPN1FBQSIsInZlciI6IjEuMCIsIndpZHMiOlsiYmFmMzdiM2EtNjEwZS00NWRhLTllNjItZDlkMWU1ZTg5MTRiIiwiNjJlOTAzOTQtNjlmNS00MjM3LTkxOTAtMDEyMTc3MTQ1ZTEwIiwiYjc5ZmJmNGQtM2VmOS00Njg5LTgxNDMtNzZiMTk0ZTg1NTA5Il0sInhtc19zdCI6eyJzdWIiOiIxVHNuVi01TGhVVlN4eHB0dktDT0phZUVuYWNoZExHbWJ4ZWtNMXRUTTFFIn0sInhtc190Y2R0IjoxNjAyNTExOTg4fQ.BQGq9nM2JZEGyFF-uQOGNL9TAaz8wzw4oyflp7eK8__6JV39E6BTQJkMGff1IjFLNgvH5KhISsTjq4hibXhDx-RwJVpCuyE3NoDDZZJg_1TDYakqst28D4kXsD7DsMJDGmyqwsoHQZVMERqsFaea6Cxdus9shsvq0_CFE8UOgM0zXwcTRMRZKJCIGs2w91oZBiQpRbji1jq1LT17NwlHFVVYJMtTOaeFaTaAckLSZ34cOgpKL1ys7b69tEh4nPTQlQGXfMcRpxFf0hbY2YCrl8K-Rqu4VdEOQ7S-9WCzJF9O6mfb-E_1al-XQhbaqp2ZNiso84sHbSTW-OnmxfGCiA";
+        final String accessToken = "";
         System.out.println("accessToken: " + accessToken);
-        int choice = 4;
+        int choice = 0;
 
         System.out.println("Please choose one of the following options:");
         System.out.println("0. Greet the user");
@@ -56,13 +55,14 @@ public class App {
         System.out.println("4. create online meeting");
         System.out.println("5. My joined teams");
 
+
         // Process user choice
         switch(choice) {
             case 0:
                 // Greet the user
-                User user = Graph.getUser(accessToken);
-                System.out.println("Welcome " + user.displayName);
-                System.out.println("Welcome " + user.toString());
+                graphService.getUser(accessToken);
+                //System.out.println("Welcome " + user.displayName);
+                //System.out.println("Welcome " + user.toString());
                 break;
             case 1:
                 // Display access token
@@ -74,14 +74,14 @@ public class App {
                 break;
             case 3:
                 // List the calendar
-                Graph.createEvent(accessToken);
+                graphService.createEvent(accessToken);
                 break;
             case 4:
                 // create online meeting
-                Graph.createOnlineMeeting(accessToken);
+                graphService.createOnlineMeeting(accessToken);
                 break;
             case 5:
-                List<Team> teamList = Graph.myJoinedTeams(accessToken);
+                List<Team> teamList = graphService.myJoinedTeams(accessToken);
                 System.out.println("My Joined Teams: "+ teamList.get(0).getRawObject());
                 break;
             default:
@@ -89,7 +89,6 @@ public class App {
         }
     }
 
-    // <FormatDateSnippet>
     private static String formatDateTimeTimeZone(DateTimeTimeZone date) {
         LocalDateTime dateTime = LocalDateTime.parse(date.dateTime);
 
@@ -97,12 +96,10 @@ public class App {
             DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)) +
             " (" + date.timeZone + ")";
     }
-    // </FormatDateSnippet>
 
-    // <ListEventsSnippet>
     private static void listCalendarEvents(String accessToken) {
         // Get the user's events
-        List<Event> events = Graph.getEvents(accessToken);
+        List<Event> events = graphService.getEvents(accessToken);
 
         System.out.println("Events:");
 
@@ -115,5 +112,4 @@ public class App {
 
         System.out.println();
     }
-    // </ListEventsSnippet>
 }

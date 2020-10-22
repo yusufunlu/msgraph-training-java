@@ -1,0 +1,16 @@
+app.id=sth
+#app.scopes=User.Read,OnlineMeetings.Read.All, OnlineMeetings.ReadWrite.All*
+app.scopes=OnlineMeetings.Read.All, OnlineMeetings.ReadWrite.All*
+#app.scopes=Team.ReadBasic.All, TeamSettings.Read.All
+#app.scopes=User.Read,Calendars.ReadWrite,Calendars.Read
+
+CLIENT_ID =sth
+SCOPES =sth
+AUTHORIZATION_CODE =sth
+REDIRECT_URL = sth
+NATIONAL_CLOUD = NationalCloud.Global;
+TENANT = sth
+CLIENT_SECRET =sth
+TENANT_GUID =sth
+USERNAME =sth
+PASSWORD =sth
